@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/images")
+@CrossOrigin(origins = "http://localhost:5173") // allow frontend during dev
 public class ImageController {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ImageController.class);
@@ -40,12 +41,6 @@ public class ImageController {
     @Value("${base.dir.path}")
     private String baseDirPath;
 
-
-//    @PostMapping
-//    public ResponseEntity<ImageMetadata> saveImageMetadata(@RequestBody ImageMetadata metadata) {
-//        ImageMetadata saved = service.saveImageMetadata(metadata);
-//        return ResponseEntity.ok(saved);
-//    }
 
     @GetMapping("/list")
     public ResponseEntity<Page<ImageListDto>> listImages(
@@ -106,7 +101,7 @@ public class ImageController {
 
         // Step 4: Save original image and thumbnail using TakenInfo
         List<String> storedInfo = imageStorageService.saveOriginalAndGenThumbnail(tempFile, metadata.getTakenInfo(), originalFilename);
-        LOGGER.info("uploadImage : stored image dir location");
+        LOGGER.info("uploadImage : stored image at dir location : {} ", storedInfo);
 
         // Step 5: Update final paths in metadata
         metadata.setImagePath(storedInfo.get(0));
