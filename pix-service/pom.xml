@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pixserve</groupId>
 	<artifactId>pix-service</artifactId>
-	<version>0.1</version>
+	<version>1.2</version>
 	<name>pix-service</name>
 	<description>Spring Boot Project for pix-serve backend api</description>
 	<url/>
@@ -70,6 +70,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
 		</plugins>
 	</build>
 

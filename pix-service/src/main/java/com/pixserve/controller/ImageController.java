@@ -13,6 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +24,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,17 +50,22 @@ public class ImageController {
     @GetMapping("/list")
     public ResponseEntity<Page<ImageListDto>> listImages(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day
     ) throws IOException {
+        LOGGER.info("listing images with page {} and size {}", page, size);
+        //Pageable pageable = PageRequest.of(page, size, Sort.by("createdOn").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "takenInfo.dateTime"));
+        //<ImageMetadata> metadataPage = imageMetadataService.getPaginatedImages(pageable);
+        Page<ImageMetadata> imageMetaDataPageList = imageMetadataService.getImagesFiltered(year, month, day, pageable);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdOn").descending());
-        Page<ImageMetadata> metadataPage = imageMetadataService.getPaginatedImages(pageable);
-
-        Page<ImageListDto> dtoPage = metadataPage.map(meta -> {
+        Page<ImageListDto> dtoPage = imageMetaDataPageList.map(meta -> {
             ImageListDto dto = new ImageListDto();
             dto.setId(meta.getId());
             dto.setName(meta.getName());
-            dto.setCreatedOn(meta.getCreatedOn());
+            dto.setCreatedOn(String.valueOf(meta.getCreatedOn().toInstant(ZoneOffset.UTC).toEpochMilli()));
             dto.setTakenInfo(meta.getTakenInfo());
             try {
                 byte[] thumbBytes = Files.readAllBytes(Path.of(baseDirPath, meta.getThumbnailPath()));
@@ -118,6 +128,107 @@ public class ImageController {
         LOGGER.info("uploadImage : completed");
         return ResponseEntity.ok(saved);
     }
+
+
+    @PostMapping("/upload/bulk")
+    public ResponseEntity<List<ImageMetadata>> uploadImagesBulk(
+            @RequestParam("files") MultipartFile[] files
+    ) throws IOException {
+
+        LOGGER.info("uploadImagesBulk : started");
+
+        if (files == null || files.length == 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<ImageMetadata> savedMetadataList = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            LOGGER.info("Processing file: {}", file.getOriginalFilename());
+
+            // Step 1: Create metadata object
+            ImageMetadata metadata = new ImageMetadata();
+            metadata.setName(file.getOriginalFilename());
+            metadata.setCreatedOn(LocalDateTime.now());
+
+            // Step 2: Temporarily save the file in temp dir
+            String originalFilename = file.getOriginalFilename();
+            String suffix = "";
+            int dotIndex = originalFilename.lastIndexOf(".");
+            if (dotIndex != -1) {
+                suffix = originalFilename.substring(dotIndex);
+            }
+            Path tempFile = Files.createTempFile("upload_", suffix);
+            file.transferTo(tempFile.toFile());
+            LOGGER.info("Image stored at temp dir: {}", tempFile.toFile().getAbsolutePath());
+
+            // Step 3: Extract metadata
+            metadata.setImagePath(tempFile.toString());
+            MetadataExtractorUtil.extractMetadata(metadata);
+            LOGGER.info("Extracted Metadata from image");
+
+            // Step 4: Save original image and thumbnail
+            List<String> storedInfo = imageStorageService.saveOriginalAndGenThumbnail(
+                    tempFile, metadata.getTakenInfo(), originalFilename
+            );
+            LOGGER.info("Stored image at dir location: {}", storedInfo);
+
+            // Step 5: Update final paths in metadata
+            metadata.setImagePath(storedInfo.get(0));
+            metadata.setThumbnailPath(storedInfo.get(1));
+            metadata.setName(storedInfo.get(2));
+
+            // Step 6: Save metadata to DB
+            ImageMetadata saved = imageMetadataService.saveImageMetadata(metadata);
+            savedMetadataList.add(saved);
+            LOGGER.info("ImageMetadata saved into DB");
+
+            // Step 7: Delete temp file
+            Files.deleteIfExists(tempFile);
+        }
+
+        LOGGER.info("uploadImagesBulk : completed for {} files", savedMetadataList.size());
+        return ResponseEntity.ok(savedMetadataList);
+    }
+
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteImage(@PathVariable String id) {
+        boolean deleted = imageMetadataService.deleteImageAndFiles(id);
+        return deleted ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/view")
+    public ResponseEntity<byte[]> viewImage(@PathVariable String id) {
+        ImageMetadata imageMetadata = imageMetadataService.getImageMetaDataBy(id);
+
+        if (imageMetadata == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            Path imagePath = Path.of(baseDirPath, imageMetadata.getImagePath());
+            byte[] imageBytes = Files.readAllBytes(imagePath);
+
+            String contentType = Files.probeContentType(imagePath);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.valueOf(contentType));
+            headers.setContentLength(imageBytes.length);
+            LOGGER.info("image view success with id : {}", id);
+            return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
 
 
 }

@@ -9,7 +9,7 @@ public class ImageListDto {
     private String id;
     private String name;
     private String thumbnail; // Base64 string
-    private LocalDateTime createdOn;
+    private String createdOn;
 
     private TakenInfo takenInfo;
 
@@ -45,11 +45,11 @@ public class ImageListDto {
         this.thumbnail = thumbnail;
     }
 
-    public LocalDateTime getCreatedOn() {
+    public String getCreatedOn() {
         return createdOn;
     }
 
-    public void setCreatedOn(LocalDateTime createdOn) {
+    public void setCreatedOn(String createdOn) {
         this.createdOn = createdOn;
     }
 }

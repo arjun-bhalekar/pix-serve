@@ -11,32 +11,22 @@ public class ImageMetadata {
     @Id
     private String id;
     private String name;
-
     private String imagePath;       // e.g., /data/pixserve/images/IMG_1234.jpg
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    public String getThumbnailPath() {
-        return thumbnailPath;
-    }
-
-    public void setThumbnailPath(String thumbnailPath) {
-        this.thumbnailPath = thumbnailPath;
-    }
-
     private String thumbnailPath;   // e.g., /data/pixserve/thumbs/IMG_1234_thumb.jpg
-
     private LocalDateTime createdOn;
     private TakenInfo takenInfo;
     private LocationInfo locationInfo;
 
     private CameraInfo cameraInfo;
+
+
+    public ImageMetadata(String id, String name, LocalDateTime createdOn, TakenInfo takenInfo, LocationInfo locationInfo) {
+        this.id = id;
+        this.name = name;
+        this.createdOn = createdOn;
+        this.takenInfo = takenInfo;
+        this.locationInfo = locationInfo;
+    }
 
     public CameraInfo getCameraInfo() {
         return cameraInfo;
@@ -48,14 +38,6 @@ public class ImageMetadata {
 
     // Constructors
     public ImageMetadata() {
-    }
-
-    public ImageMetadata(String id, String name, LocalDateTime createdOn, TakenInfo takenInfo, LocationInfo locationInfo) {
-        this.id = id;
-        this.name = name;
-        this.createdOn = createdOn;
-        this.takenInfo = takenInfo;
-        this.locationInfo = locationInfo;
     }
 
     // Getters and setters
@@ -97,6 +79,22 @@ public class ImageMetadata {
 
     public void setLocationInfo(LocationInfo locationInfo) {
         this.locationInfo = locationInfo;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public String getThumbnailPath() {
+        return thumbnailPath;
+    }
+
+    public void setThumbnailPath(String thumbnailPath) {
+        this.thumbnailPath = thumbnailPath;
     }
 
 }

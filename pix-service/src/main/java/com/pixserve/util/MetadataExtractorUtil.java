@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
 
 public class MetadataExtractorUtil {
 
@@ -65,6 +66,21 @@ public class MetadataExtractorUtil {
                 cameraInfo.setMake(make);
                 cameraInfo.setModel(model);
                 imageMetadata.setCameraInfo(cameraInfo);
+            }
+
+
+            //set current timeTaken if unable to fetch from image
+            if(Objects.isNull(imageMetadata.getTakenInfo())){
+                LocalDateTime localDateTime =LocalDateTime.now();
+
+                TakenInfo takenInfo = new TakenInfo();
+                takenInfo.setDateTime(String.valueOf(localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli()));
+                takenInfo.setYear(localDateTime.getYear());
+                takenInfo.setMonth(localDateTime.getMonthValue());
+                takenInfo.setDay(localDateTime.getDayOfMonth());
+
+                imageMetadata.setTakenInfo(takenInfo);
+
             }
 
         } catch (Exception e) {
