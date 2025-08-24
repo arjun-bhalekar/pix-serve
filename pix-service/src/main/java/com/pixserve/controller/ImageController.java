@@ -2,6 +2,7 @@ package com.pixserve.controller;
 
 import com.pixserve.dto.ImageListDto;
 import com.pixserve.model.ImageMetadata;
+import com.pixserve.service.BulkUploadService;
 import com.pixserve.service.ImageMetadataService;
 import com.pixserve.service.ImageStorageService;
 import com.pixserve.util.MetadataExtractorUtil;
@@ -28,6 +29,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -42,6 +44,9 @@ public class ImageController {
 
     @Autowired
     private ImageStorageService imageStorageService;
+
+    @Autowired
+    private BulkUploadService bulkUploadService;
 
     @Value("${base.dir.path}")
     private String baseDirPath;
@@ -131,64 +136,24 @@ public class ImageController {
 
 
     @PostMapping("/upload/bulk")
-    public ResponseEntity<List<ImageMetadata>> uploadImagesBulk(
-            @RequestParam("files") MultipartFile[] files
-    ) throws IOException {
+    public ResponseEntity<Map<String, String>> uploadImagesBulk(@RequestParam("files") MultipartFile[] files) {
+        try {
 
-        LOGGER.info("uploadImagesBulk : started");
+            LOGGER.info("uploadImagesBulk : started");
 
-        if (files == null || files.length == 0) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        List<ImageMetadata> savedMetadataList = new ArrayList<>();
-
-        for (MultipartFile file : files) {
-            LOGGER.info("Processing file: {}", file.getOriginalFilename());
-
-            // Step 1: Create metadata object
-            ImageMetadata metadata = new ImageMetadata();
-            metadata.setName(file.getOriginalFilename());
-            metadata.setCreatedOn(LocalDateTime.now());
-
-            // Step 2: Temporarily save the file in temp dir
-            String originalFilename = file.getOriginalFilename();
-            String suffix = "";
-            int dotIndex = originalFilename.lastIndexOf(".");
-            if (dotIndex != -1) {
-                suffix = originalFilename.substring(dotIndex);
+            if (files == null || files.length == 0) {
+                return ResponseEntity.badRequest().build();
             }
-            Path tempFile = Files.createTempFile("upload_", suffix);
-            file.transferTo(tempFile.toFile());
-            LOGGER.info("Image stored at temp dir: {}", tempFile.toFile().getAbsolutePath());
 
-            // Step 3: Extract metadata
-            metadata.setImagePath(tempFile.toString());
-            MetadataExtractorUtil.extractMetadata(metadata);
-            LOGGER.info("Extracted Metadata from image");
+            List<ImageMetadata> savedMetadataList = bulkUploadService.uploadBulkImages(files);
 
-            // Step 4: Save original image and thumbnail
-            List<String> storedInfo = imageStorageService.saveOriginalAndGenThumbnail(
-                    tempFile, metadata.getTakenInfo(), originalFilename
-            );
-            LOGGER.info("Stored image at dir location: {}", storedInfo);
+            LOGGER.info("uploadImagesBulk : completed for {} files", savedMetadataList.size());
+            return ResponseEntity.ok(Map.of("status", "success"));
 
-            // Step 5: Update final paths in metadata
-            metadata.setImagePath(storedInfo.get(0));
-            metadata.setThumbnailPath(storedInfo.get(1));
-            metadata.setName(storedInfo.get(2));
-
-            // Step 6: Save metadata to DB
-            ImageMetadata saved = imageMetadataService.saveImageMetadata(metadata);
-            savedMetadataList.add(saved);
-            LOGGER.info("ImageMetadata saved into DB");
-
-            // Step 7: Delete temp file
-            Files.deleteIfExists(tempFile);
+        } catch (Exception exception) {
+            LOGGER.error("Exception while /upload/bulk", exception);
+            return ResponseEntity.internalServerError().build();
         }
-
-        LOGGER.info("uploadImagesBulk : completed for {} files", savedMetadataList.size());
-        return ResponseEntity.ok(savedMetadataList);
     }
 
 
