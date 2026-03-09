@@ -8,9 +8,9 @@ It allows you to upload, organize, and view your local images along with metadat
 
 ## 🚀 Tech Stack
 
-- ⚛️ **Frontend**: React (`pix-ui/`) - React : 19.1.0 | vite : 7.0.4
-- ☕ **Backend**: Spring Boot (`pix-service/`) - Spring boot : 3.5.4 | Java : 17
-- 🍃 **Database**: MongoDB - Mongo DB CE : 8.0
+- ⚛️ **Frontend**: React (`pix-ui/`)
+- ☕ **Backend**: Spring Boot (`pix-service/`)
+- 🍃 **Database**: MongoDB
 - 🗂️ **Storage**: Local filesystem (image files in `uploads/`)
 
 ---

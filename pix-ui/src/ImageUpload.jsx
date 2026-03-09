@@ -52,7 +52,7 @@ export default function ImageUpload({ onUpload }) {
     <>
       {/* Upload button on main screen */}
       <div className="upload-bar">
-        <button className="btn btn-success" onClick={() => setIsOpen(true)}>
+        <button className="btn btn-primary" onClick={() => setIsOpen(true)}>
           Upload
         </button>
       </div>

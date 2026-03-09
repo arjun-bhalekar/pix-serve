@@ -41,13 +41,15 @@ public class ImageMetadataService {
         return repository.findAll(pageable);
     }
 
-    public Page<ImageMetadata> getImagesFiltered(Integer year, Integer month, Integer day, Pageable pageable) {
+    public Page<ImageMetadata> getImagesFiltered(Integer year, Integer month, Integer day, String tagName, Pageable pageable) {
         if (year != null && month != null && day != null) {
             return repository.findByTakenInfoYearAndTakenInfoMonthAndTakenInfoDay(year, month, day, pageable);
         } else if (year != null && month != null) {
             return repository.findByTakenInfoYearAndTakenInfoMonth(year, month, pageable);
         } else if (year != null) {
             return repository.findByTakenInfoYear(year, pageable);
+        } else if (tagName != null) {
+            return repository.findByTagsContaining(tagName, pageable);
         } else {
             return repository.findAll(pageable);
         }
@@ -78,4 +80,9 @@ public class ImageMetadataService {
         deleteImageById(id);
         return true;
     }
+
+    public List<ImageMetadata> findBySha256Hash(String sha256Hash) {
+        return repository.findBySha256Hash(sha256Hash);
+    }
+
 }

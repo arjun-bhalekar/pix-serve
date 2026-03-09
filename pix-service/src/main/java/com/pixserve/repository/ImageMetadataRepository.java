@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
+
 public interface ImageMetadataRepository extends MongoRepository<ImageMetadata, String> {
 
     Page<ImageMetadata> findByTakenInfoYearAndTakenInfoMonthAndTakenInfoDay(
@@ -18,4 +20,13 @@ public interface ImageMetadataRepository extends MongoRepository<ImageMetadata, 
     Page<ImageMetadata> findByTakenInfoYear(
             Integer year, Pageable pageable
     );
+
+    Page<ImageMetadata> findByTagsContaining(
+            String tagName, Pageable pageable
+    );
+
+    //New method for duplicate detection
+    List<ImageMetadata> findBySha256Hash(String sha256Hash);
+
+    Page<ImageMetadata> findBySha256HashIsNullOrSha256HashIs(String emptyValue, Pageable pageable);
 }

@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Document(collection = "images")
 public class ImageMetadata {
@@ -18,6 +19,11 @@ public class ImageMetadata {
     private LocationInfo locationInfo;
 
     private CameraInfo cameraInfo;
+
+    private Set<String> tags;
+
+    // ✅ New field for exact duplicate detection
+    private String sha256Hash; // Base64 encoded SHA-256 hash of image file
 
 
     public ImageMetadata(String id, String name, LocalDateTime createdOn, TakenInfo takenInfo, LocationInfo locationInfo) {
@@ -97,4 +103,29 @@ public class ImageMetadata {
         this.thumbnailPath = thumbnailPath;
     }
 
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
+
+    public String getSha256Hash() {
+        return sha256Hash;
+    }
+
+    public void setSha256Hash(String sha256Hash) {
+        this.sha256Hash = sha256Hash;
+    }
+
+    @Override
+    public String toString() {
+        return "ImageMetadata{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", imagePath='" + imagePath + '\'' +
+                ", sha256Hash='" + sha256Hash + '\'' +
+                '}';
+    }
 }

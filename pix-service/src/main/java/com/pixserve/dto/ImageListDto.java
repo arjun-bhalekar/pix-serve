@@ -4,6 +4,7 @@ import com.pixserve.model.LocationInfo;
 import com.pixserve.model.TakenInfo;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 public class ImageListDto {
     private String id;
@@ -12,6 +13,18 @@ public class ImageListDto {
     private String createdOn;
 
     private TakenInfo takenInfo;
+
+    private Set<String> tags;
+
+    private String sha256Hash;
+
+    public Set<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
+    }
 
     public TakenInfo getTakenInfo() {
         return takenInfo;
@@ -51,5 +64,13 @@ public class ImageListDto {
 
     public void setCreatedOn(String createdOn) {
         this.createdOn = createdOn;
+    }
+
+    public String getSha256Hash() {
+        return sha256Hash;
+    }
+
+    public void setSha256Hash(String sha256Hash) {
+        this.sha256Hash = sha256Hash;
     }
 }
