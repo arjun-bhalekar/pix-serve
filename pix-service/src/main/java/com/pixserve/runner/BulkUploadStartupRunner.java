@@ -37,49 +37,18 @@ public class BulkUploadStartupRunner implements CommandLineRunner {
     @Value("${bulk.upload.thread.pool.size:4}") // default 4 if not set
     private int threadPoolSize;
 
-//    @Override
-//    public void run(String... args) {
-//        try {
-//            LOGGER.info("Starting bulk upload operation");
-//
-//            Path srcDirPath = Paths.get(bulkUploadSrcDirPath);
-//            if (!Files.exists(srcDirPath) || !Files.isDirectory(srcDirPath)) {
-//                throw new IllegalArgumentException("Invalid path: " + srcDirPath);
-//            }
-//
-//            try (Stream<Path> paths = Files.list(srcDirPath)) {
-//                Path[] files = paths.filter(Files::isRegularFile).toArray(Path[]::new);
-//
-//                if (files.length == 0) {
-//                    LOGGER.info("No files found for bulk upload, skipping.");
-//                    return;
-//                }
-//
-//                List<ImageMetadata> uploadImageMetaDataList =
-//                        bulkUploadService.uploadBulkImagesFromPaths(files);
-//
-//                LOGGER.info("Bulk upload operation completed for {} files", uploadImageMetaDataList.size());
-//
-//                // ✅ Clean up source dir only after successful upload
-//                for (Path file : files) {
-//                    try {
-//                        Files.deleteIfExists(file);
-//                        LOGGER.info("Deleted file: {}", file.getFileName());
-//                    } catch (Exception ex) {
-//                        LOGGER.warn("Could not delete file: {}", file.getFileName(), ex);
-//                    }
-//                }
-//
-//            }
-//
-//        } catch (Exception e) {
-//            LOGGER.error("Bulk upload failed", e);
-//        }
-//    }
+    @Value("${bulk.upload.enabled:false}")
+    private boolean bulkUploadEnabled;
 
     @Override
     public void run(String... args) {
         try {
+
+            if(!bulkUploadEnabled){
+                LOGGER.info("bulk upload is not enabled");
+                return;
+            }
+
             LOGGER.info("Starting bulk upload operation");
 
             Path srcDirPath = Paths.get(bulkUploadSrcDirPath);

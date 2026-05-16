@@ -1,3 +1,8 @@
+To Build -
+
+> npm install
+> npm run build
+
 
 How to Start/Run app - 
 

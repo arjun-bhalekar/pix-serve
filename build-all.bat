@@ -11,7 +11,7 @@ REM ================================
 set BASE_URL=
 
 REM ================================
-REM Step 0: Prepare React env file
+REM Step 0: Prepare React env file¯¯¯
 REM ================================
 echo.
 echo [0/4] Setting backend port for React UI...

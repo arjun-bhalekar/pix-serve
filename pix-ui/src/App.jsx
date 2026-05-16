@@ -31,7 +31,7 @@ function App() {
 
       {/* Footer */}
       <footer className="footer">
-        <p>PixServe Version : 1.5 © 2025 | Developed by - <a href="https://github.com/arjun-bhalekar" target="_blank">Arjun-Bhalekar</a></p>
+        <p>PixServe Version : 1.5.2 © 2025 | Developed by - <a href="https://github.com/arjun-bhalekar" target="_blank">Arjun-Bhalekar</a></p>
       </footer>
     </div>
   );
