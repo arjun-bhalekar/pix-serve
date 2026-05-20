@@ -1,38 +1,33 @@
-import ImageUpload from "./ImageUpload";
 import ImageGallery from "./ImageGallery";
-import { useRef } from "react";
-import BulkImageUpload from "./BulkImageUpload";
-import TagManager from "./TagManager";
+import { useRef, useState } from "react";
+import LoginPage from "./LoginPage";
+import { clearAuthToken, getAuthToken } from "./auth";
+import Footer from "./Footer";
 
 function App() {
   const galleryRef = useRef();
+  const [token, setToken] = useState(() => getAuthToken());
 
-  const handleUploadSuccess = () => {
-    if (galleryRef.current) {
-      galleryRef.current.reload();
-    }
+  const handleLogout = () => {
+    clearAuthToken();
+    setToken(null);
   };
 
-  const handleTagAdded = () => {
-    if (galleryRef.current) {
-      galleryRef.current.reload(); // optional: reload gallery/filter if tags used
-    }
-  };
+  if (!token) {
+    return <LoginPage onLogin={setToken} />;
+  }
 
   return (
     <div className="page">
-      <h1 className="header">PixServe</h1>
-       <div className="upload-bar">
-        {/* <ImageUpload onUpload={handleUploadSuccess} /> */}
-        {/* <BulkImageUpload onUpload={handleUploadSuccess} /> */}
-        {/* <TagManager onTagAdded={handleTagAdded} />  */}
+      <div className="top-bar">
+        <h1 className="header">PixServe</h1>
+        <button className="btn btn-warning" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
       <ImageGallery ref={galleryRef} />
 
-      {/* Footer */}
-      <footer className="footer">
-        <p>PixServe Version : 1.5.2 © 2025 | Developed by - <a href="https://github.com/arjun-bhalekar" target="_blank">Arjun-Bhalekar</a></p>
-      </footer>
+      <Footer />
     </div>
   );
 }

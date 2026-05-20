@@ -1,5 +1,6 @@
 import { useState } from "react";
 import config from "./config";
+import { authFetch } from "./auth";
 
 function TagManager({ onTagAdded }) {
   const [newTag, setNewTag] = useState("");
@@ -13,7 +14,7 @@ function TagManager({ onTagAdded }) {
     }
     setLoading(true);
     try {
-      const response = await fetch(`${config.apiBaseUrl}/tags`, {
+      const response = await authFetch(`${config.apiBaseUrl}/tags`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newTag.trim() }),

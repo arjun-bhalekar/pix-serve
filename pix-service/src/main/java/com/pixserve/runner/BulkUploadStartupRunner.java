@@ -137,11 +137,15 @@ public class BulkUploadStartupRunner implements CommandLineRunner {
 
     private Set<String> getTagsFromTagFile() throws IOException {
         Set<String> stringSet = new HashSet<>();
-       String tagsRaw = new String(Files.readAllBytes(Paths.get(bulkUploadSrcDirPath, "tags.txt")));
-       String[] tagArray = tagsRaw.split(",");
-        Collections.addAll(stringSet, tagArray);
+        String tagsRaw = new String(Files.readAllBytes(Paths.get(bulkUploadSrcDirPath, "tags.txt")));
+        String[] tagArray = tagsRaw.split(",");
+        for (String tag : tagArray) {
+            String cleanedTag = tag.trim();
+            if (!cleanedTag.isEmpty()) {
+                stringSet.add(cleanedTag);
+            }
+        }
         return stringSet;
     }
 
 }
-

@@ -1,10 +1,11 @@
-import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { useCallback, useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import "./styles.css";
 import config from "./config";
 import ImageUpload from "./ImageUpload";
 import BulkImageUpload from "./BulkImageUpload";
 import TagManager from "./TagManager";
 import ImageModal from "./ImageModal";
+import { authFetch, clearAuthToken } from "./auth";
 
 
 
@@ -30,8 +31,13 @@ const ImageGallery = forwardRef((props, ref) => {
 
   const [tags, setTags] = useState([]);
 
+  const handleUnauthorized = useCallback(() => {
+    clearAuthToken();
+    window.location.reload();
+  }, []);
+
   // Load images with current page + filters
-  const loadImages = (pageNum = 0) => {
+  const loadImages = useCallback((pageNum = 0) => {
     setLoading(true);
 
     let url = `${config.apiBaseUrl}/images/list?page=${pageNum}&size=${pageSize}`;
@@ -40,9 +46,16 @@ const ImageGallery = forwardRef((props, ref) => {
     if (filterDay) url += `&day=${filterDay}`;
     if(filterTag) url += `&tagName=${filterTag}`;
 
-    fetch(url)
-      .then((res) => res.json())
+    authFetch(url)
+      .then((res) => {
+        if (res.status === 401 || res.status === 403) {
+          handleUnauthorized();
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (!data) return;
         setImages(Array.isArray(data?.content) ? data.content : []);
         setTotalPages(data?.totalPages || 1);
         setPage(pageNum);
@@ -53,31 +66,11 @@ const ImageGallery = forwardRef((props, ref) => {
         console.error("Failed to fetch images", err);
         setLoading(false);
       });
-  };
-
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this image?");
-    if (!confirmDelete) return;
-
-    try {
-      const response = await fetch(`${config.apiBaseUrl}/images/${id}`, { method: "DELETE" });
-      if (response.status === 204) {
-        // Refresh current page after deletion
-        loadImages(page);
-      } else if (response.status === 404) {
-        alert("Image not found!");
-      } else {
-        alert("Failed to delete image.");
-      }
-    } catch (error) {
-      console.error("Error deleting image:", error);
-      alert("Error deleting image.");
-    }
-  };
+  }, [filterDay, filterMonth, filterTag, filterYear, handleUnauthorized, pageSize]);
 
   useImperativeHandle(ref, () => ({
     reload: () => loadImages(page),
-  }));
+  }), [loadImages, page]);
 
 const handleViewImage = (id) => {
    //setSelectedImage(`${config.apiBaseUrl}/images/${id}/view`);
@@ -89,23 +82,26 @@ const closeModal = () => {
   setSelectedImageIndex(null);
 };
 
-  // initial load
+// initial tag load
 useEffect(() => {
-  fetch(`${config.apiBaseUrl}/tags`)
-      .then((res) => res.json())
-      .then((data) => setTags(data))
+  authFetch(`${config.apiBaseUrl}/tags`)
+      .then((res) => {
+        if (res.status === 401 || res.status === 403) {
+          handleUnauthorized();
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data) setTags(data);
+      })
       .catch((err) => console.error("Failed to fetch tags", err));
-  loadImages(0, pageSize);
-}, []);
+}, [handleUnauthorized]);
 
 // reload when filters or pageSize change
 useEffect(() => {
-  loadImages(0, pageSize);
-}, [pageSize, filterYear, filterMonth, filterDay, filterTag]);
-
-  const playImages = () => {
-    alert('play slide show');
-  }
+  loadImages(0);
+}, [loadImages]);
 
   const handlePrev = () => {
     if (page > 0) loadImages(page - 1);
@@ -119,11 +115,15 @@ useEffect(() => {
     const confirmDelete = window.confirm("Are you sure you want to perform bulk delete ?");
     if (!confirmDelete) return;
     try {
-      const response = await fetch(`${config.apiBaseUrl}/images/bulk-delete`, {
+      const response = await authFetch(`${config.apiBaseUrl}/images/bulk-delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ids),
       });
+      if (response.status === 401 || response.status === 403) {
+        handleUnauthorized();
+        return;
+      }
       if (response.status === 204) {
         // Refresh current page after deletion
         alert("Deleted successfully");
@@ -155,7 +155,7 @@ useEffect(() => {
   if (!confirmEdit) return;
 
   try {
-    const response = await fetch(`${config.apiBaseUrl}/images/bulk-edit-time`, {
+    const response = await authFetch(`${config.apiBaseUrl}/images/bulk-edit-time`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -163,6 +163,10 @@ useEffect(() => {
         takenTime: newTakenTime, // epoch ms or ISO string, depending on backend
       }),
     });
+    if (response.status === 401 || response.status === 403) {
+      handleUnauthorized();
+      return;
+    }
 
     if (response.status === 204) {
       alert("Updated successfully");
@@ -190,7 +194,7 @@ useEffect(() => {
   if (!confirmEdit) return;
 
   try {
-    const response = await fetch(`${config.apiBaseUrl}/images/bulk-edit-tag`, {
+    const response = await authFetch(`${config.apiBaseUrl}/images/bulk-edit-tag`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -198,6 +202,10 @@ useEffect(() => {
         tagName: tagName, // epoch ms or ISO string, depending on backend
       }),
     });
+    if (response.status === 401 || response.status === 403) {
+      handleUnauthorized();
+      return;
+    }
 
     if (response.status === 204) {
       alert("Updated successfully");

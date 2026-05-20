@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import config from "./config";
+import { authFetch } from "./auth";
 
 
 export default function ImageUpload({ onUpload }) {
@@ -26,7 +27,7 @@ export default function ImageUpload({ onUpload }) {
     formData.append("file", file);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/images/upload`, {
+      const response = await authFetch(`${config.apiBaseUrl}/images/upload`, {
         method: "POST",
         body: formData,
       });

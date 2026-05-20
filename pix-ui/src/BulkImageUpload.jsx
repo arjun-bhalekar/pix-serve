@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import config from "./config";
+import { authFetch } from "./auth";
 
 export default function BulkImageUpload({ onUpload }) {
   const [files, setFiles] = useState([]);
@@ -26,7 +27,7 @@ export default function BulkImageUpload({ onUpload }) {
     files.forEach((file) => formData.append("files", file)); // matches backend
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/images/upload/bulk`, {
+      const response = await authFetch(`${config.apiBaseUrl}/images/upload/bulk`, {
         method: "POST",
         body: formData,
       });
