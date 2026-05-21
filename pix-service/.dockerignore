@@ -1,0 +1,13 @@
+target/*
+!target/*.jar
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+HELP.md

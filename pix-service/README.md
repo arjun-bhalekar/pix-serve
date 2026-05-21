@@ -107,7 +107,38 @@ Build the jar:
 Run the packaged jar:
 
 ```bash
-java -jar target/pix-service-1.5.2.jar
+java -jar target/pix-service-1.6.jar
+```
+
+## Docker
+
+Build the jar first because the Dockerfile copies the packaged jar from `target`:
+
+```bash
+./mvnw clean package
+```
+
+Build the Docker image:
+
+```bash
+docker build -t pix-service:latest .
+```
+
+Run the image with the `prod` profile configuration:
+
+```bash
+docker run -d \
+  --name pix-service \
+  -p 8082:8082 \
+  -e PIXSERVE_AUTH_USERNAME=admin \
+  -e PIXSERVE_AUTH_PASSWORD='Test@123' \
+  -e BASE_DIR_PATH=/data/pixserve \
+  -e SPRING_DATA_MONGODB_URI=mongodb://host.docker.internal:27017/pixserve-prod \
+  -e SPRING_DATA_MONGODB_DATABASE=pixserve-prod \
+  -e BULK_UPLOAD_ENABLED=false \
+  -e BULK_UPLOAD_DIR_PATH=/data/pixserve/bulk-upload \
+  -v /Users/arjunbhalekar/pix-serve-prod/storage:/data/pixserve \
+  pix-service:latest
 ```
 
 ## Authentication

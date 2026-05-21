@@ -3,6 +3,7 @@ package com.pixserve.controller;
 import com.pixserve.dto.LoginRequest;
 
 import com.pixserve.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,12 +13,17 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class AuthController {
 
+    @Value("${pixserve.auth.username:admin}")
+    private String authUsername;
+
+    @Value("${pixserve.auth.password:Test@123}")
+    private String authPassword;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
-        // Temporary hardcoded credentials
-        if ("admin".equals(request.getUsername())
-                && "Test@123".equals(request.getPassword())) {
+        if (authUsername.equals(request.getUsername())
+                && authPassword.equals(request.getPassword())) {
 
             String token = JwtUtil.generateToken(request.getUsername());
 
