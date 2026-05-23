@@ -121,7 +121,7 @@ Build the jar first because the Dockerfile copies the packaged jar from `target`
 Build the Docker image:
 
 ```bash
-docker build -t pix-service:latest .
+docker buildx build  --platform linux/amd64 -t pix-serve:latest .
 ```
 
 Run the image with the `prod` profile configuration:

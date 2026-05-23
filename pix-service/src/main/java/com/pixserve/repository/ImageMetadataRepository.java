@@ -4,6 +4,7 @@ import com.pixserve.model.ImageMetadata;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
 
@@ -24,6 +25,9 @@ public interface ImageMetadataRepository extends MongoRepository<ImageMetadata, 
     Page<ImageMetadata> findByTagsContaining(
             String tagName, Pageable pageable
     );
+
+    @Query("{ $or: [ { tags: null }, { tags: { $size: 0 } } ] }")
+    Page<ImageMetadata> findImagesWithoutTags(Pageable pageable);
 
     //New method for duplicate detection
     List<ImageMetadata> findBySha256Hash(String sha256Hash);

@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import config from "./config";
 import { authFetch } from "./auth";
 
-function TagManager({ onTagAdded }) {
+const TagManager = forwardRef(({ onTagAdded, hideTrigger = false }, ref) => {
   const [newTag, setNewTag] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    open: () => setIsOpen(true),
+  }));
 
   const handleAddTag = async () => {
     if (!newTag.trim()) {
@@ -39,11 +43,13 @@ function TagManager({ onTagAdded }) {
   return (
     <>
       {/* Open Modal Button */}
-      <div className="upload-bar">
-        <button className="btn btn-info" onClick={() => setIsOpen(true)}>
-          Add Tag
-        </button>
-      </div>
+      {!hideTrigger && (
+        <div className="upload-bar">
+          <button className="btn btn-info" onClick={() => setIsOpen(true)}>
+            Add Tag
+          </button>
+        </div>
+      )}
 
       {/* Modal */}
       {isOpen && (
@@ -79,6 +85,6 @@ function TagManager({ onTagAdded }) {
       )}
     </>
   );
-}
+});
 
 export default TagManager;

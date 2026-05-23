@@ -49,7 +49,10 @@ public class ImageMetadataService {
         } else if (year != null) {
             return repository.findByTakenInfoYear(year, pageable);
         } else if (tagName != null) {
-            return repository.findByTagsContaining(tagName, pageable);
+            if(tagName.equalsIgnoreCase("NoTag"))
+                return repository.findImagesWithoutTags(pageable);
+            else
+                return repository.findByTagsContaining(tagName, pageable);
         } else {
             return repository.findAll(pageable);
         }

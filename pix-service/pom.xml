@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pixserve</groupId>
 	<artifactId>pix-service</artifactId>
-	<version>1.6</version>
+	<version>1.6.3</version>
 	<name>pix-service</name>
 	<description>Spring Boot Project for pix-serve backend api</description>
 	<url/>

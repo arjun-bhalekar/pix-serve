@@ -19,4 +19,12 @@ public class CameraInfo {
     public void setModel(String model) {
         this.model = model;
     }
+
+    @Override
+    public String toString() {
+        return "CameraInfo{" +
+                "make='" + make + '\'' +
+                ", model='" + model + '\'' +
+                '}';
+    }
 }

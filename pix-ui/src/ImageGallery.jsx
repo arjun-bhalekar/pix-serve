@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import "./styles.css";
 import config from "./config";
 import ImageUpload from "./ImageUpload";
@@ -9,7 +9,10 @@ import { authFetch, clearAuthToken } from "./auth";
 
 
 
-const ImageGallery = forwardRef((props, ref) => {
+const ImageGallery = forwardRef(({ onToolbarStateChange }, ref) => {
+  const uploadRef = useRef(null);
+  const bulkUploadRef = useRef(null);
+  const tagManagerRef = useRef(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   //const [selectedImage, setSelectedImage] = useState(null); // modal image
@@ -68,10 +71,6 @@ const ImageGallery = forwardRef((props, ref) => {
       });
   }, [filterDay, filterMonth, filterTag, filterYear, handleUnauthorized, pageSize]);
 
-  useImperativeHandle(ref, () => ({
-    reload: () => loadImages(page),
-  }), [loadImages, page]);
-
 const handleViewImage = (id) => {
    //setSelectedImage(`${config.apiBaseUrl}/images/${id}/view`);
    const index = images.findIndex((img) => img.id === id);
@@ -111,7 +110,7 @@ useEffect(() => {
     if (page < totalPages - 1) loadImages(page + 1);
   };
 
-  const handleBulkDelete = async (ids) => {
+  const handleBulkDelete = useCallback(async (ids) => {
     const confirmDelete = window.confirm("Are you sure you want to perform bulk delete ?");
     if (!confirmDelete) return;
     try {
@@ -141,11 +140,11 @@ useEffect(() => {
       alert("Error deleting image.");
     }
 
-  };
+  }, [handleUnauthorized, loadImages, page]);
 
 
   //bulk edit call 
-  const handleBulkEdit = async (ids, newTakenTime) => {
+  const handleBulkEdit = useCallback(async (ids, newTakenTime) => {
   if (!newTakenTime) {
     alert("Please select a valid time.");
     return;
@@ -181,7 +180,7 @@ useEffect(() => {
     console.error("Error updating images:", error);
     alert("Error updating images.");
   }
-};
+}, [handleUnauthorized, loadImages, page]);
 
 //bulk edit call 
   const handleBulkTagEdit  = async (ids, tagName) => {
@@ -222,7 +221,7 @@ useEffect(() => {
   }
 };
 
-const handleSelectAll = () => {
+const handleSelectAll = useCallback(() => {
   if (selectAll) {
     // unselect all
     setSelectedImages([]);
@@ -232,7 +231,7 @@ const handleSelectAll = () => {
     setSelectedImages(allIds);
   }
   setSelectAll(!selectAll);
-};
+}, [images, selectAll]);
 
 
 
@@ -243,6 +242,45 @@ const handleSelectAll = () => {
   const handleTagAdded = () => {
     window.location.reload();
   };
+
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedImages.length === 0) {
+      alert("Please select images to delete.");
+      return;
+    }
+
+    handleBulkDelete(selectedImages);
+  }, [handleBulkDelete, selectedImages]);
+
+  const handleEditSelectedTime = useCallback(() => {
+    if (selectedImages.length === 0) {
+      alert("Please select images to edit.");
+      return;
+    }
+
+    const newTime = prompt("Enter new taken time (YYYY-MM-DD HH:mm):");
+    if (newTime) {
+      const epochMillis = new Date(newTime).getTime();
+      handleBulkEdit(selectedImages, epochMillis);
+    }
+  }, [handleBulkEdit, selectedImages]);
+
+  useEffect(() => {
+    onToolbarStateChange?.({
+      selectedCount: selectedImages.length,
+      selectAll,
+    });
+  }, [onToolbarStateChange, selectAll, selectedImages.length]);
+
+  useImperativeHandle(ref, () => ({
+    reload: () => loadImages(page),
+    openUpload: () => uploadRef.current?.open(),
+    openBulkUpload: () => bulkUploadRef.current?.open(),
+    openAddTag: () => tagManagerRef.current?.open(),
+    toggleSelectAll: handleSelectAll,
+    deleteSelected: handleDeleteSelected,
+    editSelectedTime: handleEditSelectedTime,
+  }), [handleDeleteSelected, handleEditSelectedTime, handleSelectAll, loadImages, page]);
 
   return (
     <div className="gallery-wrap">
@@ -286,7 +324,8 @@ const handleSelectAll = () => {
           onChange={(e) => setFilterTag(e.target.value)}
           className="filter-input"
         >
-          <option value="">All Tags</option>
+          <option value="">All</option>
+          <option value="NoTag">No Tag</option>
           {tags.map((tag) => (
             <option key={tag.id} value={tag.name}>
               {tag.name}
@@ -303,7 +342,7 @@ const handleSelectAll = () => {
             setFilterTag("");
           }}
         >
-          Clear Filters
+          Clear
         </button>
 
         <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
@@ -321,23 +360,6 @@ const handleSelectAll = () => {
             <button className="btn btn-primary" onClick={handleNext} disabled={page + 1 === totalPages}>
               Next
             </button>
-            <button className="btn btn-success" onClick={handleSelectAll}>
-              {selectAll ? "Unselect All" : "Select All"}
-            </button>
-            <button title="Delete Selected Images" className="btn btn-primary" onClick={() => handleBulkDelete(selectedImages)} >
-              Delete
-            </button>
-
-            <button title="Set Time taken for selected images" className="btn btn-primary" onClick={() => {
-              const newTime = prompt("Enter new taken time (YYYY-MM-DD HH:mm):");
-              if (newTime) {
-                const epochMillis = new Date(newTime).getTime();
-                handleBulkEdit(selectedImages, epochMillis);
-              }
-            }} >
-              Edit Time
-            </button>
-
             <select
               disabled={selectedImages.length === 0}
               onChange={(e) => {
@@ -352,9 +374,9 @@ const handleSelectAll = () => {
               ))}
             </select>
 
-            <ImageUpload onUpload={handleUploadSuccess} />
-            <BulkImageUpload onUpload={handleUploadSuccess} />
-            <TagManager onTagAdded={handleTagAdded} /> 
+            <ImageUpload ref={uploadRef} onUpload={handleUploadSuccess} hideTrigger />
+            <BulkImageUpload ref={bulkUploadRef} onUpload={handleUploadSuccess} hideTrigger />
+            <TagManager ref={tagManagerRef} onTagAdded={handleTagAdded} hideTrigger /> 
 
             <span style={{color: "red"}}>{selectedImages.length} selected</span>
             <span>

@@ -33,14 +33,14 @@ public class BulkUploadService {
     private ImageMetadataService imageMetadataService;
 
     // Existing method (API usage)
-    public List<ImageMetadata> uploadBulkImages(MultipartFile[] files) throws Exception {
+    public List<ImageMetadata> uploadBulkImages(MultipartFile[] files, Set<String> tags) throws Exception {
         List<ImageMetadata> savedMetadataList = new ArrayList<>();
 
         for (MultipartFile file : files) {
             Path tempFile = Files.createTempFile("upload_", getFileExtension(file.getOriginalFilename()));
             file.transferTo(tempFile.toFile());
 
-            ImageMetadata metadata = processFile(tempFile, file.getOriginalFilename(), null);
+            ImageMetadata metadata = processFile(tempFile, file.getOriginalFilename(), tags);
             savedMetadataList.add(metadata);
 
             Files.deleteIfExists(tempFile);

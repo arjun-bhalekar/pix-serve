@@ -1,13 +1,16 @@
 package com.pixserve.controller;
 
 import com.pixserve.dto.BulkEditRequest;
+import com.pixserve.dto.ImageInfoDto;
 import com.pixserve.dto.ImageListDto;
 import com.pixserve.model.ImageMetadata;
+import com.pixserve.model.NominatimResponse;
 import com.pixserve.model.Tag;
 import com.pixserve.model.TakenInfo;
 import com.pixserve.repository.ImageMetadataRepository;
 import com.pixserve.repository.TagRepository;
 import com.pixserve.service.BulkUploadService;
+import com.pixserve.service.GeocodingService;
 import com.pixserve.service.ImageMetadataService;
 import com.pixserve.service.ImageStorageService;
 import com.pixserve.util.ImageHashUtil;
@@ -63,6 +66,9 @@ public class ImageController {
     @Autowired
     private ImageMetadataRepository repository;
 
+    @Autowired
+    private GeocodingService geocodingService;
+
 
     @GetMapping("/list")
     public ResponseEntity<Page<ImageListDto>> listImages(
@@ -111,7 +117,8 @@ public class ImageController {
 
     @PostMapping("/upload")
     public ResponseEntity<ImageMetadata> uploadImage(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(required = false) String tagName
     ) throws IOException {
 
         LOGGER.info("uploadImage : started");
@@ -119,6 +126,10 @@ public class ImageController {
         ImageMetadata metadata = new ImageMetadata();
         metadata.setName(file.getOriginalFilename());
         metadata.setCreatedOn(LocalDateTime.now());
+
+        if (tagName != null && !tagName.trim().isEmpty()) {
+            metadata.setTags(Set.of(tagName.trim()));
+        }
 
         // Step 2: Temporarily save the file in temp dir to extract metadata
         String originalFilename = file.getOriginalFilename();
@@ -173,7 +184,9 @@ public class ImageController {
 
 
     @PostMapping("/upload/bulk")
-    public ResponseEntity<Map<String, String>> uploadImagesBulk(@RequestParam("files") MultipartFile[] files) {
+    public ResponseEntity<Map<String, String>> uploadImagesBulk(
+            @RequestParam("files") MultipartFile[] files,
+            @RequestParam(required = false) String tagName) {
         try {
 
             LOGGER.info("uploadImagesBulk : started");
@@ -182,7 +195,12 @@ public class ImageController {
                 return ResponseEntity.badRequest().build();
             }
 
-            List<ImageMetadata> savedMetadataList = bulkUploadService.uploadBulkImages(files);
+            Set<String> tags = null;
+            if (tagName != null && !tagName.trim().isEmpty()) {
+                tags = Set.of(tagName.trim());
+            }
+
+            List<ImageMetadata> savedMetadataList = bulkUploadService.uploadBulkImages(files, tags);
 
             LOGGER.info("uploadImagesBulk : completed for {} files", savedMetadataList.size());
             return ResponseEntity.ok(Map.of("status", "success"));
@@ -356,5 +374,44 @@ public class ImageController {
         return ResponseEntity.ok(msg);
     }
 
+    @GetMapping("/{id}/metadata")
+    public ResponseEntity<ImageInfoDto> getImageMetadata(@PathVariable String id) {
+        ImageMetadata imageMetadata = imageMetadataService.getImageMetaDataBy(id);
+
+        if (imageMetadata == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        ImageInfoDto infoDto = new ImageInfoDto();
+        infoDto.setName(imageMetadata.getName());
+        infoDto.setTakenInfo(imageMetadata.getTakenInfo());
+        infoDto.setTags(imageMetadata.getTags());
+
+        String cameraInfo = imageMetadata.getCameraInfo()!=null ?
+                imageMetadata.getCameraInfo().getMake() + "-" + imageMetadata.getCameraInfo().getModel():"NA";
+        infoDto.setCamera(cameraInfo);
+
+        String locationInfo = "NA";
+
+        if(imageMetadata.getLocationInfo()!=null) {
+
+            String lat = imageMetadata.getLocationInfo().getLatitude();
+            String lon = imageMetadata.getLocationInfo().getLongitude();
+            try {
+                NominatimResponse response = geocodingService.getLocationData(lat, lon);
+                locationInfo = response.getDisplayName();
+            } catch (Exception e) {
+                LOGGER.error("Exception while fetching location from openstreetmap api", e);
+                //throw new RuntimeException(e);
+            }
+        }
+
+        infoDto.setLocation(locationInfo);
+
+
+
+        LOGGER.info("image metadata fetched for id : {}",id);
+        return ResponseEntity.ok(infoDto);
+    }
 
 }
