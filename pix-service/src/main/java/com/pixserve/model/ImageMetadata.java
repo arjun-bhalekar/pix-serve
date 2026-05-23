@@ -1,12 +1,20 @@
 package com.pixserve.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Document(collection = "images")
+@CompoundIndexes({
+        @CompoundIndex(
+                name = "idx_taken_info_pagination",
+                def = "{'takenInfo.year': -1, 'takenInfo.month': -1, 'takenInfo.day': -1, 'createdOn': -1, '_id': 1}"
+        )
+})
 public class ImageMetadata {
 
     @Id

@@ -88,7 +88,9 @@ public class ImageController {
                 Sort.by(
                         Sort.Order.desc("takenInfo.year"),
                         Sort.Order.desc("takenInfo.month"),
-                        Sort.Order.desc("takenInfo.day")
+                        Sort.Order.desc("takenInfo.day"),
+                        Sort.Order.desc("createdOn"),
+                        Sort.Order.asc("id")
                 )
         );
         //<ImageMetadata> metadataPage = imageMetadataService.getPaginatedImages(pageable);

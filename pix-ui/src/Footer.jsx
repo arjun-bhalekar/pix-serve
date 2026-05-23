@@ -1,4 +1,4 @@
-const APP_VERSION = "1.6.3";
+const APP_VERSION = "1.6.4";
 const COPYRIGHT_YEAR = "2025";
 const DEVELOPER_NAME = "Arjun-Bhalekar";
 const DEVELOPER_URL = "https://github.com/arjun-bhalekar";
