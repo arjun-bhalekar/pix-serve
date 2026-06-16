@@ -48,4 +48,14 @@ public class TakenInfo {
     public void setDateTime(String dateTime) {
         this.dateTime = dateTime;
     }
+
+    @Override
+    public String toString() {
+        return "TakenInfo{" +
+                "year=" + year +
+                ", month=" + month +
+                ", day=" + day +
+                ", dateTime='" + dateTime + '\'' +
+                '}';
+    }
 }

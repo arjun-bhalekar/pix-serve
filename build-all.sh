@@ -83,6 +83,7 @@ mkdir -p build
 echo "Moving JAR to build folder..."
 
 find pix-service/target -name "*.jar" -exec cp {} build/ \;
+find pix-service/target -name "*.jar" -exec cp {} /Users/arjunbhalekar/Applications/pix-serve-app/ \;
 
 echo "================================"
 echo "Build finished."

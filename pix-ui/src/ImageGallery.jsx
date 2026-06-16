@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import "./styles.css";
 import config from "./config";
-import ImageUpload from "./ImageUpload";
+import MediaUpload from "./MediaUpload.jsx";
 import BulkImageUpload from "./BulkImageUpload";
 import TagManager from "./TagManager";
 import ImageModal from "./ImageModal";
@@ -43,7 +43,7 @@ const ImageGallery = forwardRef(({ onToolbarStateChange }, ref) => {
   const loadImages = useCallback((pageNum = 0) => {
     setLoading(true);
 
-    let url = `${config.apiBaseUrl}/images/list?page=${pageNum}&size=${pageSize}`;
+    let url = `${config.apiBaseUrl}/media/list?page=${pageNum}&size=${pageSize}`;
     if (filterYear) url += `&year=${filterYear}`;
     if (filterMonth) url += `&month=${filterMonth}`;
     if (filterDay) url += `&day=${filterDay}`;
@@ -72,7 +72,7 @@ const ImageGallery = forwardRef(({ onToolbarStateChange }, ref) => {
   }, [filterDay, filterMonth, filterTag, filterYear, handleUnauthorized, pageSize]);
 
 const handleViewImage = (id) => {
-   //setSelectedImage(`${config.apiBaseUrl}/images/${id}/view`);
+   //setSelectedImage(`${config.apiBaseUrl}/media/${id}/view`);
    const index = images.findIndex((img) => img.id === id);
   setSelectedImageIndex(index);
  };
@@ -114,7 +114,7 @@ useEffect(() => {
     const confirmDelete = window.confirm("Are you sure you want to perform bulk delete ?");
     if (!confirmDelete) return;
     try {
-      const response = await authFetch(`${config.apiBaseUrl}/images/bulk-delete`, {
+      const response = await authFetch(`${config.apiBaseUrl}/media/bulk-delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ids),
@@ -154,7 +154,7 @@ useEffect(() => {
   if (!confirmEdit) return;
 
   try {
-    const response = await authFetch(`${config.apiBaseUrl}/images/bulk-edit-time`, {
+    const response = await authFetch(`${config.apiBaseUrl}/media/bulk-edit-time`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -193,7 +193,7 @@ useEffect(() => {
   if (!confirmEdit) return;
 
   try {
-    const response = await authFetch(`${config.apiBaseUrl}/images/bulk-edit-tag`, {
+    const response = await authFetch(`${config.apiBaseUrl}/media/bulk-edit-tag`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -221,7 +221,8 @@ useEffect(() => {
   }
 };
 
-const handleSelectAll = useCallback(() => {
+
+  const handleSelectAll = useCallback(() => {
   if (selectAll) {
     // unselect all
     setSelectedImages([]);
@@ -374,7 +375,7 @@ const handleSelectAll = useCallback(() => {
               ))}
             </select>
 
-            <ImageUpload ref={uploadRef} onUpload={handleUploadSuccess} hideTrigger />
+            <MediaUpload ref={uploadRef} onUpload={handleUploadSuccess} hideTrigger />
             <BulkImageUpload ref={bulkUploadRef} onUpload={handleUploadSuccess} hideTrigger />
             <TagManager ref={tagManagerRef} onTagAdded={handleTagAdded} hideTrigger /> 
 
@@ -395,6 +396,10 @@ const handleSelectAll = useCallback(() => {
             {images.map((img) => (
               <div key={img.id} className="card">
                 <div className="image-container">
+                  {img.mediaType === "VIDEO" && (
+                      <div className="video-badge">▶
+                      </div>
+                  )}
                   <img
                     className="thumb"
                     src={img.thumbnail}

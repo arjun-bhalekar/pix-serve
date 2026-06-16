@@ -3,17 +3,22 @@ import config from "./config";
 import { authFetch } from "./auth";
 
 export default function ImageModal({ images, selectedIndex, onClose }) {
+
+
   const [currentIndex, setCurrentIndex] = useState(selectedIndex);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [imageInfo, setImageInfo] = useState(null);
   const [infoLoading, setInfoLoading] = useState(false);
   const [infoError, setInfoError] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [mediaUrl, setMediaUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef(null);
   const touchStartRef = useRef(null);
   const infoCacheRef = useRef({});
+  const currentMedia = images[currentIndex];
+
+
 
   useEffect(() => {
     setCurrentIndex(selectedIndex);
@@ -110,19 +115,19 @@ export default function ImageModal({ images, selectedIndex, onClose }) {
     const loadImage = async () => {
       setLoading(true);
       try {
-        const response = await authFetch(`${config.apiBaseUrl}/images/${images[currentIndex].id}/view`);
+        const response = await authFetch(`${config.apiBaseUrl}/media/${images[currentIndex].id}/view`);
         if (!response.ok) {
           throw new Error("Failed to load image");
         }
         const blob = await response.blob();
         objectUrl = URL.createObjectURL(blob);
         if (!cancelled) {
-          setImageUrl(objectUrl);
+          setMediaUrl(objectUrl);
         }
       } catch (error) {
         console.error("Image load error:", error);
         if (!cancelled) {
-          setImageUrl("");
+          setMediaUrl("");
         }
       } finally {
         if (!cancelled) {
@@ -163,7 +168,7 @@ export default function ImageModal({ images, selectedIndex, onClose }) {
 
       try {
         const response = await authFetch(
-            `${config.apiBaseUrl}/images/${imageId}/metadata`
+            `${config.apiBaseUrl}/media/${imageId}/metadata`
         );
 
         if (!response.ok) {
@@ -209,15 +214,24 @@ export default function ImageModal({ images, selectedIndex, onClose }) {
         
         <button className="nav-btn prev-btn" onClick={showPrevImage}>⬅️</button>
 
-        {loading && <p className="modal-loading">Loading image...</p>}
-        {!loading && imageUrl && (
-          <img
-            src={imageUrl}
-            alt="Full"
-            className="full-image"
-          />
+        {loading && <p className="modal-loading">Loading media...</p>}
+        {!loading && mediaUrl && currentMedia.mediaType === "IMAGE" && (
+            <img
+                src={mediaUrl}
+                alt="Full"
+                className="full-image"
+            />
         )}
-        {!loading && !imageUrl && <p className="modal-loading">Unable to load image.</p>}
+
+        {!loading && mediaUrl && currentMedia.mediaType === "VIDEO" && (
+            <video
+                src={mediaUrl}
+                controls
+                autoPlay
+                className="full-image"
+            />
+        )}
+        {!loading && !mediaUrl && <p className="modal-loading">Unable to load media !</p>}
 
         {showInfo && (
           <div className="image-info-panel">

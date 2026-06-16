@@ -1,8 +1,9 @@
 import ImageGallery from "./ImageGallery";
 import { useRef, useState } from "react";
 import LoginPage from "./LoginPage";
-import { clearAuthToken, getAuthToken } from "./auth";
+import {authFetch, clearAuthToken, getAuthToken} from "./auth";
 import Footer from "./Footer";
+import config from "./config.js";
 
 function App() {
   const galleryRef = useRef();
@@ -15,6 +16,43 @@ function App() {
   const handleLogout = () => {
     clearAuthToken();
     setToken(null);
+  };
+
+  const [importing, setImporting] = useState(false);
+
+  const handleBulkImport = async () => {
+
+    const confirmed = window.confirm(
+        "Start bulk import from configured source directory?"
+    );
+    if (!confirmed) {
+      return;
+    }
+    try {
+      setImporting(true);
+      const response = await authFetch(
+          `${config.apiBaseUrl}/admin/bulk-import`,
+          {
+            method: "POST"
+          }
+      );
+      if (!response.ok) {
+        throw new Error("Bulk import failed");
+      }
+      const data = await response.json();
+      alert(
+          `Imported ${data["files-uploaded"]} of ${data["files-found"]} files`
+      );
+      // refresh gallery
+      galleryRef.current?.reload();
+
+    } catch (error) {
+      console.error(error);
+      alert("Bulk import failed");
+    } finally {
+      setImporting(false);
+    }
+
   };
 
   if (!token) {
@@ -33,6 +71,10 @@ function App() {
           </button>
           <button className="menu-item" onClick={() => galleryRef.current?.openBulkUpload()}>
             Bulk Upload
+          </button>
+
+          <button className="menu-item" onClick={handleBulkImport} disabled={importing}>
+            {importing ? "Importing..." : "Bulk-Import-Server"}
           </button>
           <button className="menu-item" onClick={() => galleryRef.current?.toggleSelectAll()}>
             {toolbarState.selectAll ? "Unselect All" : "Select All"}

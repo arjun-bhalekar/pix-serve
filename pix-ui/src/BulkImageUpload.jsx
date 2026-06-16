@@ -47,7 +47,7 @@ const BulkImageUpload = forwardRef(({ onUpload, hideTrigger = false }, ref) => {
 
     try {
       const tagQuery = selectedTag ? `?tagName=${encodeURIComponent(selectedTag)}` : "";
-      const response = await authFetch(`${config.apiBaseUrl}/images/upload/bulk${tagQuery}`, {
+      const response = await authFetch(`${config.apiBaseUrl}/media/upload/bulk${tagQuery}`, {
         method: "POST",
         body: formData,
       });

@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pixserve</groupId>
 	<artifactId>pix-service</artifactId>
-	<version>1.6.4</version>
+	<version>1.7.5</version>
 	<name>pix-service</name>
 	<description>Spring Boot Project for pix-serve backend api</description>
 	<url/>
@@ -46,6 +46,12 @@
 			<groupId>net.coobird</groupId>
 			<artifactId>thumbnailator</artifactId>
 			<version>0.4.20</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.bytedeco</groupId>
+			<artifactId>javacv-platform</artifactId>
+			<version>1.5.13</version>
 		</dependency>
 
 		<!-- To extract all meta data from image  -->

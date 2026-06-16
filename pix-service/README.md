@@ -337,3 +337,17 @@ Tags should be comma-separated.
 - Uploaded filenames should be sanitized before being used in filesystem paths.
 - The current test class is commented out, so `./mvnw test` verifies compilation but does not provide real behavior coverage.
 - `application.properties` contains machine-specific paths and production-like MongoDB defaults; use profiles or environment variables for local/prod separation.
+
+## DB Changes : To Support Videos
+
+    db.images.renameCollection("media");
+
+    db.media.updateMany(
+        {},
+        {
+            $rename: {
+            "imagePath": "mediaPath"
+            }
+        }
+    );
+
